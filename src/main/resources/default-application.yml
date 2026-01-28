@@ -1,3 +1,9 @@
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN}
+    chat-id: ${TELEGRAM_CHAT_ID}
+    enabled: true
+
 server:
   port: 8090  # порт для REST API мониторинга
 
@@ -6,6 +12,10 @@ notification:
     port: 1111
     bind-address: localhost # слушаем все интерфейсы
     allowed-ip: 91.222.167.188       # Контроллер в локальной сети
+
+  rfid:
+    duplicate-timeout-minutes: 2  # 2 минут для дубликатов
+    check-interval-seconds: 10    # Проверка каждые 10 секунд
 
 logger:
   config: ./logback-spring.xml

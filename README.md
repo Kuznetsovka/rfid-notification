@@ -16,8 +16,13 @@ mvn clean install
 mvn clean install -Dskip.docker.push=false
 
 ```
+```bash
+docker push kuznetsovka/rfid-notification:latest
+
 ```
-docker push kuznetsovka/notification-logger:latest
+
+```bash
+docker-compose up -d
 
 ```
 
