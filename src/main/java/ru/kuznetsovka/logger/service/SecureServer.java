@@ -77,6 +77,6 @@ public class SecureServer {
     }
 
     private boolean isIpAllowed(String ip) {
-        return allowedIp.equals(ip);
+        return ip.startsWith(allowedIp);
     }
 }
