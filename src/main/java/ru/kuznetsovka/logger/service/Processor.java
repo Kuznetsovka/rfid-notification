@@ -31,8 +31,6 @@ public class Processor {
             duplicateTracker.processRfid(rfidInfo.getRfid(), rfidInfo.getAntenna());
 
         } catch (final Exception e) {
-            log.error("❌ Ошибка обработки сообщения: {}", e.getMessage());
-
             // Отправляем уведомление об ошибке
             String errorMsg = String.format(
                     "⚠️ *Ошибка обработки RFID*\\n" +
@@ -43,7 +41,7 @@ public class Processor {
                     clientIp,
                     e.getMessage()
             );
-            notificationService.sendAlert(errorMsg);
+            log.error("❌ Ошибка обработки сообщения: {} error {}", errorMsg, e.getMessage());
         }
     }
 

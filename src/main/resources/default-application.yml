@@ -10,7 +10,7 @@ server:
 notification:
   socket:
     port: 1111
-    bind-address: localhost # слушаем все интерфейсы
+    bind-address: 0.0.0.0 # слушаем все интерфейсы
     allowed-ip: 91.222.167.188       # Контроллер в локальной сети
 
   rfid:

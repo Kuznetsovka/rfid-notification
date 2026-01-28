@@ -49,6 +49,7 @@ public class NotificationSocketServer {
             new Thread(this::acceptSingleConnection, "Socket-Acceptor").start();
 
         } catch (IOException e) {
+            stopSocketServer();
             log.error("❌ Ошибка запуска сервера", e);
         }
     }
@@ -79,6 +80,7 @@ public class NotificationSocketServer {
                 continue;
             } catch (IOException e) {
                 if (isRunning) {
+                    stopSocketServer();
                     log.error("Ошибка accept", e);
                 }
             }
@@ -123,14 +125,6 @@ public class NotificationSocketServer {
                 log.info("🔄 Готов к новому подключению");
             }
         }
-    }
-
-    private boolean isIpAllowed(String clientIp) {
-        if (allowedIp == null || allowedIp.trim().isEmpty()) {
-            log.warn("⚠️  allowed-ip не настроен, принимаю все подключения");
-            return true;
-        }
-        return allowedIp.equals(clientIp);
     }
 
     private void closeClientSocket(Socket socket) {
