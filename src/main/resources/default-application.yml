@@ -1,5 +1,5 @@
 server:
-  port: 8080  # порт для REST API мониторинга
+  port: 8090  # порт для REST API мониторинга
 
 notification:
   socket:
@@ -7,12 +7,5 @@ notification:
     bind-address: localhost # слушаем все интерфейсы
     allowed-ip: 91.222.167.188       # Контроллер в локальной сети
 
-    # Лимиты
-    max-connections: 2
-    connection-timeout-ms: 30000
-
-    # Защита от атак
-    max-message-size: 1024   # Макс размер сообщения
-    rate-limit-per-ip: 2    # Сообщений в секунду
 logger:
   config: ./logback-spring.xml

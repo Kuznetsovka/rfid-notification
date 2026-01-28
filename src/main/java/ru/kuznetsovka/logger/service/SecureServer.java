@@ -19,9 +19,6 @@ public class SecureServer {
     @Value("${notification.socket.allowed-ip:}")
     private String allowedIp;
     
-    @Value("${notification.socket.max-connections:2}")
-    private int maxConnections;
-    
     private final AtomicInteger currentConnections = new AtomicInteger(0);
     private final Map<String, Integer> connectionAttempts = new ConcurrentHashMap<>();
     
@@ -29,21 +26,15 @@ public class SecureServer {
         String clientIp = clientSocket.getInetAddress().getHostAddress();
         
         try {
-            // 1. Проверка лимита подключений
-            if (currentConnections.get() >= maxConnections) {
-                log.warn("Достигнут лимит подключений. Отклоняем {}", clientIp);
-                sendResponse(clientSocket, "ERROR: Connection limit exceeded");
-                return false;
-            }
             
-            // 2. Проверка попыток подключения (защита от brute force)
+            // 1. Проверка попыток подключения (защита от brute force)
             if (isBlockedIp(clientIp)) {
                 log.warn("IP заблокирован: {}", clientIp);
                 sendResponse(clientSocket, "ERROR: IP blocked");
                 return false;
             }
             
-            // 3. Проверка разрешенных IP
+            // 2. Проверка разрешенных IP
             if (!isIpAllowed(clientIp)) {
                 log.warn("Неразрешенный IP: {}", clientIp);
                 recordFailedAttempt(clientIp);
@@ -51,7 +42,7 @@ public class SecureServer {
                 return false;
             }
             
-            // 5. Все проверки пройдены
+            // 3. Все проверки пройдены
             currentConnections.incrementAndGet();
             log.info("✅ Принято защищенное подключение от {}", clientIp);
             return true;

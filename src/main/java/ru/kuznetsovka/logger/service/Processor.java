@@ -3,32 +3,53 @@ package ru.kuznetsovka.logger.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.kuznetsovka.logger.dto.Pass;
 import ru.kuznetsovka.logger.dto.RfidInfo;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class Processor {
-    public static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    public void processNotification(String message, String clientIp) {
-        // Ваша бизнес-логика обработки уведомлений
-        log.debug("🔄 Обработка уведомления от {}: {}", clientIp, message);
 
+    private static final DateTimeFormatter timeFormatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private final RfidDuplicateTracker duplicateTracker;
+    private final NotificationService notificationService;
+
+    public void processNotification(String message, String clientIp) {
         try {
-            final ObjectMapper mapper = new ObjectMapper();
-            final RfidInfo rfidInfo = mapper.readValue(message, RfidInfo.class);
+            ObjectMapper mapper = new ObjectMapper();
+            RfidInfo rfidInfo = mapper.readValue(message, RfidInfo.class);
+
+            // Логируем
             logNotification(rfidInfo);
-        } catch (Exception e) {
-            log.error("❌ Ошибка обработки сообщения от {}: {}", clientIp, e.getMessage());
+
+            // Отслеживаем дубликаты
+            duplicateTracker.processRfid(rfidInfo.getRfid(), rfidInfo.getAntenna());
+
+        } catch (final Exception e) {
+            log.error("❌ Ошибка обработки сообщения: {}", e.getMessage());
+
+            // Отправляем уведомление об ошибке
+            String errorMsg = String.format(
+                    "⚠️ *Ошибка обработки RFID*\\n" +
+                            "• *Сообщение:* `%s`\\n" +
+                            "• *IP клиента:* %s\\n" +
+                            "• *Ошибка:* %s",
+                    message.length() > 50 ? message.substring(0, 50) + "..." : message,
+                    clientIp,
+                    e.getMessage()
+            );
+            notificationService.sendAlert(errorMsg);
         }
     }
 
-    private void logNotification(final RfidInfo rfidInfo) {
-        final String timestamp = LocalDateTime.now().format(timeFormatter);
-        final String pass = Pass.valueOf(rfidInfo.getAntenna());
-        log.info("📨 Время: [{}] | Направление: {} | RFID: {} | Владелец: {}",
-                timestamp, pass, rfidInfo.getRfid(), null);
+    private void logNotification(RfidInfo rfidInfo) {
+        String timestamp = LocalDateTime.now().format(timeFormatter);
+        log.info("📨 [{}] Антенна: {} | RFID: {}",
+                timestamp, rfidInfo.getAntenna(), rfidInfo.getRfid());
     }
 }

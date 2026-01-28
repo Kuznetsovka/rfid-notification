@@ -33,6 +33,7 @@ public class NotificationSocketServer {
     private volatile boolean isRunning = false;
     private volatile Socket activeClientSocket = null; // Храним активное подключение
     private final Processor processor;
+    private final SecureServer secureServer;
 
     @EventListener(ApplicationReadyEvent.class)
     public void startSocketServer() {
@@ -44,7 +45,6 @@ public class NotificationSocketServer {
 
             isRunning = true;
             log.info("✅ Сокет-сервер запущен. Ожидаю подключение контроллера...");
-
             // Запускаем в отдельном потоке
             new Thread(this::acceptSingleConnection, "Socket-Acceptor").start();
 
@@ -56,23 +56,14 @@ public class NotificationSocketServer {
     private void acceptSingleConnection() {
         while (isRunning) {
             try {
-                log.info("👂 Ожидаю подключения...");
+                log.debug("👂 Ожидаю подключения...");
                 Socket clientSocket = serverSocket.accept();
                 String clientIp = clientSocket.getInetAddress().getHostAddress();
 
-                // Проверяем разрешенный IP
-                if (!isIpAllowed(clientIp)) {
-                    log.warn("⚠️  Отклонено подключение от неразрешенного IP: {}", clientIp);
-                    clientSocket.close();
-                    continue;
+                boolean isAllowedSocket = secureServer.secure(clientSocket);
+                if (!isAllowedSocket) {
+                    return;
                 }
-
-                // Если уже есть активное подключение - закрываем старое
-                if (activeClientSocket != null && !activeClientSocket.isClosed()) {
-                    log.debug("🔄 Закрываю предыдущее подключение");
-                    closeClientSocket(activeClientSocket);
-                }
-
                 // Принимаем новое подключение
                 activeClientSocket = clientSocket;
                 activeClientSocket.setSoTimeout(30000);
