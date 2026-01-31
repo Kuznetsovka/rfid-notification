@@ -40,18 +40,7 @@ public class RfidController {
             30,
             false
         );
-        
-        String message = String.format(
-            "🧪 *ТЕСТОВОЕ УВЕДОМЛЕНИЕ*\\n" +
-            "• *Метка:* `%s`\\n" +
-            "• *Антенна:* %s\\n" +
-            "• *Счетчик:* %d",
-            testEvent.getRfid(),
-            testEvent.getAntenna(),
-            testEvent.getNotificationCount()
-        );
-        
-        notificationService.sendAlert(message);
+        tracker.sendNotification(testEvent);
         return ResponseEntity.ok("Тестовое уведомление отправлено");
     }
 }

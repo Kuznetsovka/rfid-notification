@@ -97,7 +97,7 @@ public class NotificationSocketServer {
                 try {
                     int bytesRead = reader.read(buffer);
                     if (bytesRead == -1) {
-                        log.info("📤 Клиент закрыл соединение");
+                        log.debug("📤 Клиент закрыл соединение");
                         break;
                     }
 
@@ -122,7 +122,7 @@ public class NotificationSocketServer {
             // Если это было активное подключение - очищаем
             if (clientSocket == activeClientSocket) {
                 activeClientSocket = null;
-                log.info("🔄 Готов к новому подключению");
+                log.debug("🔄 Готов к новому подключению");
             }
         }
     }

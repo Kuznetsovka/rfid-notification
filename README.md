@@ -20,7 +20,7 @@ mvn clean install -Dskip.docker.push=false
 docker push kuznetsovka/rfid-notification:latest
 
 ```
-
+docker pull kuznetsovka/rfid-notification:latest
 ```bash
 docker-compose up -d
 

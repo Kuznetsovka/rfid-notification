@@ -27,6 +27,10 @@ public class RfidDuplicateTracker {
     @Value("${notification.rfid.check-interval-seconds:10}")
     private int checkIntervalSeconds;
 
+    @Value("${notification.rfid.count-duplicate:10}")
+    private int countDuplicate;
+
+
     private final ConcurrentMap<Object, Object> rfidEvents = CacheBuilder
             .newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -81,7 +85,7 @@ public class RfidDuplicateTracker {
                 // Проверяем дубликаты
                 if (!event.isNotified() &&
                         event.getFirstSeen().isBefore(threshold) &&
-                        event.getNotificationCount() > 1) {
+                        event.getNotificationCount() >= countDuplicate) {
 
                     // Отправляем уведомление
                     sendNotification(event);
@@ -99,15 +103,15 @@ public class RfidDuplicateTracker {
         }
     }
     
-    private void sendNotification(RfidEvent event) {
+    public void sendNotification(RfidEvent event) {
         String message = String.format(
-            "🚨 *ДУБЛИКАТ RFID*\\n" +
-            "• *Метка:* `%s`\\n" +
-            "• *Антенна:* %s\\n" +
-            "• *Время обнаружения:* %s\\n" +
-            "• *Последний раз:* %s\\n" +
-            "• *Количество срабатываний:* %d\\n" +
-            "• *Длительность:* >%d минут",
+            "🚨 *ДУБЛИКАТ RFID*\n" +
+            "• *Метка:* `%s`\n" +
+            "• *Антенна:* %d\n" +
+            "• *Время обнаружения:* %s\n" +
+            "• *Последний раз:* %s\n" +
+            "• *Количество срабатываний:* %d\n" +
+            "• *Длительность:* больше %d минут",
             event.getRfid(),
             event.getAntenna(),
             event.getFirstSeen().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
