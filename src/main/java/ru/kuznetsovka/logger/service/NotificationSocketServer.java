@@ -26,14 +26,13 @@ public class NotificationSocketServer {
     @Value("${notification.socket.bind-address:0.0.0.0}")
     private String bindAddress;
 
-    @Value("${notification.socket.allowed-ip:}")
-    private String allowedIp;
-
     private ServerSocket serverSocket;
     private volatile boolean isRunning = false;
     private volatile Socket activeClientSocket = null; // Храним активное подключение
     private final Processor processor;
     private final SecureServer secureServer;
+    private final NotificationService notificationService;
+    private Thread acceptorThread;
 
     @EventListener(ApplicationReadyEvent.class)
     public void startSocketServer() {
@@ -46,7 +45,11 @@ public class NotificationSocketServer {
             isRunning = true;
             log.info("✅ Сокет-сервер запущен. Ожидаю подключение контроллера...");
             // Запускаем в отдельном потоке
-            new Thread(this::acceptSingleConnection, "Socket-Acceptor").start();
+            if (acceptorThread == null || !acceptorThread.isAlive()) {
+                acceptorThread = new Thread(this::acceptSingleConnection, "Socket-Acceptor");
+                acceptorThread.setDaemon(true); // Делаем демоном для автоматического завершения
+                acceptorThread.start();
+            }
 
         } catch (IOException e) {
             stopSocketServer();
@@ -63,6 +66,7 @@ public class NotificationSocketServer {
 
                 boolean isAllowedSocket = secureServer.secure(clientSocket);
                 if (!isAllowedSocket) {
+                    notificationService.sendAlert("Несанкционированный ip: " + clientIp);
                     return;
                 }
                 // Принимаем новое подключение
@@ -77,7 +81,6 @@ public class NotificationSocketServer {
 
             } catch (final SocketTimeoutException e) {
                 // Таймаут accept - нормально, продолжаем цикл
-                continue;
             } catch (IOException e) {
                 if (isRunning) {
                     stopSocketServer();
@@ -151,6 +154,15 @@ public class NotificationSocketServer {
                 serverSocket.close();
             } catch (IOException e) {
                 log.error("Ошибка закрытия серверного сокета", e);
+            }
+        }
+
+        if (acceptorThread != null && acceptorThread.isAlive()) {
+            acceptorThread.interrupt();
+            try {
+                acceptorThread.join(5000); // Ждем завершения потока
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
 
