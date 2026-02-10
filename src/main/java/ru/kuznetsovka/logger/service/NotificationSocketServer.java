@@ -67,7 +67,7 @@ public class NotificationSocketServer {
                 boolean isAllowedSocket = secureServer.secure(clientSocket);
                 if (!isAllowedSocket) {
                     notificationService.sendAlert("Несанкционированный ip: " + clientIp);
-                    return;
+                    continue;
                 }
                 // Принимаем новое подключение
                 activeClientSocket = clientSocket;
